@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import { useUserStore } from '../stores/user'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,7 +18,8 @@ const router = createRouter({
     {
       path: '/manage-music',
       name: 'manage',
-      component: () => import('../views/ManageView.vue')
+      component: () => import('../views/ManageView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/:catchAll(.*)*',
@@ -25,6 +27,18 @@ const router = createRouter({
     }
   ],
   linkExactActiveClass: 'text-yellow-500'
+})
+
+router.beforeEach((to, from, next) => {
+  if (!to.meta.requiresAuth) {
+    next()
+    return
+  }
+  if (useUserStore().userLoggedIn) {
+    next()
+  } else {
+    next({ name: 'home' })
+  }
 })
 
 export default router

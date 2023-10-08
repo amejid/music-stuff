@@ -1,11 +1,23 @@
 <script setup>
 import { useModalStore } from '../stores/modal'
 import { useUserStore } from '../stores/user'
+import { useRoute, useRouter } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
 const modal = useModalStore()
 const user = useUserStore()
 
 function toggleAuthModal() {
   modal.toggle()
+}
+
+function signOut() {
+  user.signOut()
+
+  if (route.meta.requiresAuth) {
+    router.replace({ name: 'home' })
+  }
 }
 </script>
 
@@ -38,7 +50,7 @@ function toggleAuthModal() {
               <router-link class="px-2 text-white" :to="{ name: 'manage' }">Manage</router-link>
             </li>
             <li>
-              <a class="px-2 text-white" href="#" @click.prevent="user.signOut">Logout</a>
+              <a class="px-2 text-white" href="#" @click.prevent="signOut">Logout</a>
             </li>
           </template>
         </ul>
