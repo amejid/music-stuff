@@ -1,5 +1,6 @@
-import { initializeApp } from 'firebase/app'
-import 'firebase/auth'
+import firebase from 'firebase/compat/app'
+import 'firebase/compat/auth'
+import 'firebase/compat/firestore'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyBN1YCJKujBwQha-12CO_EFmCIh6yo3j-c',
@@ -9,4 +10,10 @@ const firebaseConfig = {
   appId: '1:424815312264:web:e7374ece64e6d27c3a8e3d'
 }
 
-export default initializeApp(firebaseConfig)
+firebase.initializeApp(firebaseConfig)
+const auth = firebase.auth()
+const db = firebase.firestore()
+
+const usersCollection = db.collection('users')
+
+export { auth, db, usersCollection }

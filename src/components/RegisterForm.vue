@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { auth, usersCollection } from '../includes/firebase'
 
 const userData = {
   country: 'Germany'
@@ -18,15 +19,37 @@ const regShowAlert = ref(false)
 const regAlertVariant = ref('bg-blue-500')
 const regAlertMsg = ref('Please wait! Your account is being created')
 
-function register(values) {
+async function register(values) {
   regShowAlert.value = true
   regInSubmission.value = true
   regAlertVariant.value = 'bg-blue-500'
   regAlertMsg.value = 'Please wait! Your account is being created'
+  let userCred = null
+  try {
+    userCred = await auth.createUserWithEmailAndPassword(values.email, values.password)
+  } catch (err) {
+    regInSubmission.value = false
+    regAlertVariant.value = 'bg-red-500'
+    regAlertMsg.value = 'An unexpected error occurred. Please try again.'
+    return
+  }
+  try {
+    await usersCollection.add({
+      name: values.name,
+      email: values.email,
+      age: values.age,
+      country: values.country
+    })
+  } catch (err) {
+    regInSubmission.value = false
+    regAlertVariant.value = 'bg-red-500'
+    regAlertMsg.value = 'An unexpected error occurred. Please try again.'
+    return
+  }
 
   regAlertVariant.value = 'bg-green-500'
   regAlertMsg.value = 'Success! Your account has been created.'
-  console.log(values)
+  console.log(userCred)
 }
 </script>
 
