@@ -29,6 +29,7 @@ async function login(values) {
 
   loginAlertVariant.value = 'bg-green-500'
   loginAlertMsg.value = 'Success! You are now logged in.'
+  window.location.reload()
 }
 </script>
 

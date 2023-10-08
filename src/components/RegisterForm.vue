@@ -37,6 +37,7 @@ async function register(values) {
 
   regAlertVariant.value = 'bg-green-500'
   regAlertMsg.value = 'Success! Your account has been created.'
+  window.location.reload()
 }
 </script>
 
