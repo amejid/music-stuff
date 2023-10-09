@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import { storage } from '../includes/firebase'
+import { auth, songsCollection, storage } from '../includes/firebase'
 
 const isDragOver = ref(false)
 const uploads = reactive([])
@@ -16,7 +16,7 @@ function dragDisable() {
 function upload(event) {
   dragDisable()
 
-  const files = [...event.dataTransfer.files]
+  const files = event.dataTransfer ? [...event.dataTransfer.files] : [...event.target.files]
   files.forEach((file) => {
     if (file.type !== 'audio/mpeg') {
       return
@@ -46,7 +46,18 @@ function upload(event) {
         uploads[uploadIdx].textClass = 'text-red-400'
         console.log(error)
       },
-      () => {
+      async () => {
+        const song = {
+          uid: auth.currentUser.uid,
+          displayName: auth.currentUser.displayName,
+          originalName: task.snapshot.ref.name,
+          modifiedName: task.snapshot.ref.name,
+          genre: '',
+          commentCount: 0
+        }
+        song.url = await task.snapshot.ref.getDownloadURL()
+        await songsCollection.add(song)
+
         uploads[uploadIdx].variant = 'bg-green-400'
         uploads[uploadIdx].icon = 'fas fa-check'
         uploads[uploadIdx].textClass = 'text-green-400'
@@ -77,6 +88,7 @@ function upload(event) {
       >
         <h5>Drop your files here</h5>
       </div>
+      <input type="file" multiple @change="upload($event)" />
       <hr class="my-6" />
       <!-- Progess Bars -->
       <div class="mb-4" v-for="upload in uploads" :key="upload.name">
