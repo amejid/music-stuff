@@ -1,6 +1,6 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import { onBeforeMount, ref } from 'vue'
+import { computed, onBeforeMount, ref, watch } from 'vue'
 import { auth, commentsCollection, songsCollection } from '../includes/firebase'
 import { useUserStore } from '../stores/user'
 
@@ -10,6 +10,7 @@ const user = useUserStore()
 
 const song = ref({})
 const comments = ref([])
+const sort = ref('1')
 const inSubmission = ref(false)
 const showAlert = ref(false)
 const alertVariant = ref('bg-blue-500')
@@ -18,6 +19,16 @@ const alertMsg = ref('Please wait')
 const schema = {
   comment: 'required|min:3'
 }
+
+const sortedComments = computed(() =>
+  comments.value
+    .slice()
+    .sort((a, b) =>
+      sort.value === '1'
+        ? new Date(b.datePosted) - new Date(a.datePosted)
+        : new Date(a.datePosted) - new Date(b.datePosted)
+    )
+)
 
 async function addComment(values, { resetForm }) {
   inSubmission.value = true
@@ -34,6 +45,9 @@ async function addComment(values, { resetForm }) {
   }
 
   await commentsCollection.add(comment)
+  song.value.commentCount += 1
+  await songsCollection.doc(route.params.id).update({ commentCount: song.value.commentCount })
+
   await getComments()
 
   inSubmission.value = false
@@ -51,12 +65,23 @@ async function getComments() {
   })
 }
 
+watch(sort, (newVal) => {
+  if (newVal === route.query.sort) return
+
+  router.push({ query: { sort: newVal } })
+})
+
 onBeforeMount(async () => {
   const docSnapshot = await songsCollection.doc(route.params.id).get()
   if (!docSnapshot.exists) {
     router.push({ name: 'home' })
     return
   }
+
+  const { sort: sortFromQuery } = route.query
+
+  sort.value = sortFromQuery === '1' || sortFromQuery === '2' ? sortFromQuery : '1'
+
   song.value = docSnapshot.data()
   await getComments()
 })
@@ -89,7 +114,7 @@ onBeforeMount(async () => {
     <div class="bg-white rounded border border-gray-200 relative flex flex-col">
       <div class="px-6 pt-6 pb-5 font-bold border-b border-gray-200">
         <!-- Comment Count -->
-        <span class="card-title">Comments ({{ comments.length }})</span>
+        <span class="card-title">Comments ({{ song.commentCount }})</span>
         <i class="fa fa-comments float-right text-green-400 text-2xl"></i>
       </div>
       <div class="p-6">
@@ -118,6 +143,7 @@ onBeforeMount(async () => {
         </vee-form>
         <!-- Sort Comments -->
         <select
+          v-model="sort"
           class="block mt-4 py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded"
         >
           <option value="1">Latest</option>
@@ -130,7 +156,7 @@ onBeforeMount(async () => {
   <ul class="container mx-auto">
     <li
       class="p-6 bg-gray-50 border border-gray-200"
-      v-for="comment in comments"
+      v-for="comment in sortedComments"
       :key="comment.docId"
     >
       <!-- Comment Author -->
