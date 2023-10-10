@@ -22,6 +22,11 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/song/:id',
+      name: 'song',
+      component: () => import('../views/SongView.vue')
+    },
+    {
       path: '/:catchAll(.*)*',
       redirect: { name: 'home' }
     }
