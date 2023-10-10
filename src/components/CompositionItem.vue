@@ -1,14 +1,10 @@
 <script setup>
 import { ref } from 'vue'
-import { songsCollection } from '../includes/firebase'
+import { songsCollection, storage } from '../includes/firebase'
 
 const props = defineProps({
   song: {
     type: Object,
-    required: true
-  },
-  updateSong: {
-    type: Function,
     required: true
   },
   idx: {
@@ -16,6 +12,8 @@ const props = defineProps({
     required: true
   }
 })
+
+const emit = defineEmits(['updateSong', 'removeSong'])
 
 const title = ref(props.song.modifiedName)
 const genre = ref(props.song.genre)
@@ -49,11 +47,22 @@ async function edit(values) {
     return
   }
 
-  props.updateSong(props.idx, values)
+  emit('updateSong', props.idx, values)
 
   inSubmission.value = false
   alertVariant.value = 'bg-green-500'
   alertMsg.value = 'Success'
+}
+
+async function deleteSong() {
+  const storageRef = storage.ref()
+  const songRef = storageRef.child(`songs/${props.song.originalName}`)
+
+  await songRef.delete()
+
+  await songsCollection.doc(props.song.docId).delete()
+
+  emit('removeSong', props.idx)
 }
 </script>
 
@@ -61,7 +70,10 @@ async function edit(values) {
   <div class="border border-gray-200 p-3 mb-4 rounded">
     <div v-show="!showForm">
       <h4 class="inline-block text-2xl font-bold">{{ song.modifiedName }}</h4>
-      <button class="ml-1 py-1 px-2 text-sm rounded text-white bg-red-600 float-right">
+      <button
+        class="ml-1 py-1 px-2 text-sm rounded text-white bg-red-600 float-right"
+        @click.prevent="deleteSong"
+      >
         <i class="fa fa-times"></i>
       </button>
       <button

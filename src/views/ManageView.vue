@@ -9,15 +9,21 @@ const songs = reactive([])
 onBeforeMount(async () => {
   const snapshot = await songsCollection.where('uid', '==', auth.currentUser.uid).get()
 
-  snapshot.forEach((doc) => {
-    const song = { ...doc.data(), docId: doc.id }
-    songs.push(song)
-  })
+  snapshot.forEach(addSong)
 })
 
 function updateSong(i, values) {
   songs[i].modifiedName = values.modifiedName
   songs[i].genre = values.genre
+}
+
+function removeSong(i) {
+  songs.splice(i, 1)
+}
+
+function addSong(doc) {
+  const song = { ...doc.data(), docId: doc.id }
+  songs.push(song)
 }
 </script>
 
@@ -25,7 +31,7 @@ function updateSong(i, values) {
   <section class="container mx-auto mt-6">
     <div class="md:grid md:grid-cols-3 md:gap-4">
       <div class="col-span-1">
-        <upload-music />
+        <upload-music @add-song="addSong" />
       </div>
       <div class="col-span-2">
         <div class="bg-white rounded border border-gray-200 relative flex flex-col">
@@ -40,7 +46,8 @@ function updateSong(i, values) {
               :key="song.docId"
               :idx="i"
               :song="song"
-              :updateSong="updateSong"
+              @update-song="updateSong"
+              @remove-song="removeSong"
             />
           </div>
         </div>

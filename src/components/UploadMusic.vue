@@ -2,6 +2,8 @@
 import { onBeforeUnmount, reactive, ref } from 'vue'
 import { auth, songsCollection, storage } from '../includes/firebase'
 
+const emit = defineEmits(['addSong'])
+
 const isDragOver = ref(false)
 const uploads = reactive([])
 
@@ -56,7 +58,9 @@ function upload(event) {
           commentCount: 0
         }
         song.url = await task.snapshot.ref.getDownloadURL()
-        await songsCollection.add(song)
+        const songRef = await songsCollection.add(song)
+        const songSnapshot = await songRef.get()
+        emit('addSong', songSnapshot)
 
         uploads[uploadIdx].variant = 'bg-green-400'
         uploads[uploadIdx].icon = 'fas fa-check'
