@@ -13,10 +13,8 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['updateSong', 'removeSong'])
+const emit = defineEmits(['updateSong', 'removeSong', 'updateUnsavedFlag'])
 
-const title = ref(props.song.modifiedName)
-const genre = ref(props.song.genre)
 const showForm = ref(false)
 const inSubmission = ref(false)
 const showAlert = ref(false)
@@ -48,6 +46,7 @@ async function edit(values) {
   }
 
   emit('updateSong', props.idx, values)
+  emit('updateUnsavedFlag', false)
 
   inSubmission.value = false
   alertVariant.value = 'bg-green-500'
@@ -87,7 +86,7 @@ async function deleteSong() {
       <div class="text-white text-center font-bold p-4 mb-4" v-if="showAlert" :class="alertVariant">
         {{ alertMsg }}
       </div>
-      <vee-form :validation-schema="schema" @submit="edit">
+      <vee-form :validation-schema="schema" :initial-values="props.song" @submit="edit">
         <div class="mb-3">
           <label class="inline-block mb-2">Song Title</label>
           <vee-field
@@ -95,7 +94,7 @@ async function deleteSong() {
             name="modifiedName"
             class="block w-full py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded"
             placeholder="Enter Song Title"
-            v-model="title"
+            @input="emit('updateUnsavedFlag', true)"
           />
           <error-message name="modifiedName" class="text-red-600" />
         </div>
@@ -106,7 +105,7 @@ async function deleteSong() {
             name="genre"
             class="block w-full py-1.5 px-3 text-gray-800 border border-gray-300 transition duration-500 focus:outline-none focus:border-black rounded"
             placeholder="Enter Genre"
-            v-model="genre"
+            @input="emit('updateUnsavedFlag', true)"
           />
           <error-message name="genre" class="text-red-600" />
         </div>

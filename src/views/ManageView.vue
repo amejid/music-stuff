@@ -1,15 +1,26 @@
 <script setup>
 import UploadMusic from '../components/UploadMusic.vue'
 import { auth, songsCollection } from '../includes/firebase'
-import { onBeforeMount, reactive } from 'vue'
+import { onBeforeMount, reactive, ref } from 'vue'
 import CompositionItem from '../components/CompositionItem.vue'
+import { onBeforeRouteLeave } from 'vue-router'
 
 const songs = reactive([])
+const unsavedFlag = ref(false)
 
 onBeforeMount(async () => {
   const snapshot = await songsCollection.where('uid', '==', auth.currentUser.uid).get()
 
   snapshot.forEach(addSong)
+})
+
+onBeforeRouteLeave((to, from, next) => {
+  if (!unsavedFlag.value) {
+    next()
+  } else {
+    const leave = confirm('You have unsaved changes')
+    next(leave)
+  }
 })
 
 function updateSong(i, values) {
@@ -24,6 +35,10 @@ function removeSong(i) {
 function addSong(doc) {
   const song = { ...doc.data(), docId: doc.id }
   songs.push(song)
+}
+
+function updateUnsavedFlag(value) {
+  unsavedFlag.value = value
 }
 </script>
 
@@ -48,6 +63,7 @@ function addSong(doc) {
               :song="song"
               @update-song="updateSong"
               @remove-song="removeSong"
+              @update-unsaved-flag="updateUnsavedFlag"
             />
           </div>
         </div>
